@@ -3,24 +3,32 @@ package employee;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.HttpClientErrorException;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import employee.model.Employee;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = EmployeeApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(initializers = {EmployeeControllerIntegrationTest.Initializer.class})
+
 public class EmployeeControllerIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
@@ -32,10 +40,23 @@ public class EmployeeControllerIntegrationTest {
         return "http://localhost:" + port;
     }
 
-    @Test
-    public void contextLoads() {
+    @ClassRule
+    public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:11.1")
+            .withDatabaseName("employee_database")
+            .withUsername("user")
+            .withPassword("password");
 
+    static class Initializer
+            implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+            TestPropertyValues.of(
+                    "spring.datasource.url=" + postgreSQLContainer.getJdbcUrl(),
+                    "spring.datasource.username=" + postgreSQLContainer.getUsername(),
+                    "spring.datasource.password=" + postgreSQLContainer.getPassword()
+            ).applyTo(configurableApplicationContext.getEnvironment());
+        }
     }
+
 
     @Test
     public void testGetAllEmployees() {
@@ -89,9 +110,9 @@ public class EmployeeControllerIntegrationTest {
         restTemplate.delete(getRootUrl() + "/employees/" + id);
 
         try {
-            employee = restTemplate.getForObject(getRootUrl() + "/employees/" + id, Employee.class);
+            restTemplate.getForObject(getRootUrl() + "/employees/" + id, Employee.class);
         } catch (final HttpClientErrorException e) {
-            assertEquals(e.getStatusCode(), HttpStatus.NOT_FOUND);
+            assertEquals(HttpStatus.NOT_FOUND, e.getStatusCode());
         }
     }
 }
