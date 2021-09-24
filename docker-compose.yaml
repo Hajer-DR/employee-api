@@ -6,6 +6,6 @@ services:
     environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=employee_ddatabase
+      - POSTGRES_DB=employee_database
     ports:
       - 5432:5432

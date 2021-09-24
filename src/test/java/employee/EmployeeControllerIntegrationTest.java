@@ -19,6 +19,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.HttpClientErrorException;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -59,6 +60,8 @@ public class EmployeeControllerIntegrationTest {
 
 
     @Test
+    @Sql(value = "/db/init-db.sql")
+
     public void testGetAllEmployees() {
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<String>(null, headers);
@@ -70,6 +73,7 @@ public class EmployeeControllerIntegrationTest {
     }
 
     @Test
+    @Sql(value = "/db/init-db.sql")
     public void testGetEmployeeById() {
         Employee employee = restTemplate.getForObject(getRootUrl() + "/employees/1", Employee.class);
         System.out.println(employee.getFirstName());
@@ -77,6 +81,7 @@ public class EmployeeControllerIntegrationTest {
     }
 
     @Test
+    @Sql(value = "/db/init-db.sql")
     public void testCreateEmployee() {
         Employee employee = new Employee();
         employee.setEmailId("admin@gmail.com");
@@ -89,6 +94,7 @@ public class EmployeeControllerIntegrationTest {
     }
 
     @Test
+    @Sql(value = "/db/init-db.sql")
     public void testUpdateEmployee() {
         int id = 1;
         Employee employee = restTemplate.getForObject(getRootUrl() + "/employees/" + id, Employee.class);
@@ -102,6 +108,7 @@ public class EmployeeControllerIntegrationTest {
     }
 
     @Test
+    @Sql(value = "/db/init-db.sql")
     public void testDeleteEmployee() {
         int id = 2;
         Employee employee = restTemplate.getForObject(getRootUrl() + "/employees/" + id, Employee.class);
