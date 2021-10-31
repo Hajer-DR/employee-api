@@ -5,7 +5,7 @@ pipeline {
   registry = "Hajer-DR/employee-client"
   registry2 = "Hajer-DR/employee-api"
 
-  SONARQUBE_URL = "http://192.168.0.30"
+  SONARQUBE_URL = "http://192.168.0.181"
   SONARQUBE_PORT = "9000"
   }
     
