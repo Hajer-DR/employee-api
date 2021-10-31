@@ -1,40 +1,45 @@
 pipeline {
-
- agent any
-
- options { 
-  skipDefaultCheckout() 
- }
-	
- stages {
- 
-  stage('SCM')
-  {
-   steps {
-    checkout scm
-   }
-  }
-  
+  agent any
     
-  stage('Build') {
+  environment {
+  registry = "narjess6/employees-client"
+  registry2 = "narjess6/employees-api"
+
+  SONARQUBE_URL = "http://192.168.0.30"
+  SONARQUBE_PORT = "9000"
+  }
+    
+  stages {
+
+ stage('EMPLOYEE-API - Checkout code') {
+      steps {
+        git url:'https://github.com/Narjesse/employee-api.git', branch:'main'
+      }
+    }
+
+  stage('EMPLOYEE-API - CI - Build and Test') {
+  
+  
    parallel {
-   
-    stage('Compile') {	
+    stage('Compile') {
      agent {
       docker {
        image 'maven:3.6.0-jdk-8-alpine'
        args '-v /root/.m2/repository:/root/.m2/repository'
        // to use the same node and workdir defined on top-level pipeline for all docker agents
        reuseNode true
-      }	  
-     }	 
+      }
+     }
      steps {
-      sh 'mvn clean compile'
+      sh ' mvn clean compile'
 	  sh 'mvn package -DskipTests=true'
-     }	 
+     }
     }
-		
+	
+	
   stage('Unit Tests') {
+
+
    agent {
     docker {
      image 'maven:3.6.0-jdk-8-alpine'
@@ -43,41 +48,136 @@ pipeline {
     }
    }
    steps {
-    sh 'mvn test'
+    
+    sh 'mvn  install '
+
    }
+
   }
-  stage('Integration Tests') { 
-   agent {
-    docker {
-     image 'maven:3.6.0-jdk-8-alpine'
-     args '-v /root/.m2/repository:/root/.m2/repository'
-     reuseNode true
-    }
-   }
-   steps {
-    sh 'mvn verify -Dsurefire.skip=true'
-   }
-   post {
+
+ }
+} 
+
+  stage('EMPLOYEE-API - CI') {
+
+   parallel {
    
-    always {
-     junit 'target/failsafe-reports/**/*.xml'
+
+    stage('JavaDoc') {
+
+     agent {
+      docker {
+       image 'maven:3.6.0-jdk-8-alpine'
+       args '-v /root/.m2/repository:/root/.m2/repository'
+       reuseNode true
+      }
+     }
+     steps {
+      sh ' mvn javadoc:javadoc'
+      step([$class: 'JavadocArchiver', javadocDir: './target/site/apidocs', keepAll: 'true'])
+     }
     }
-    success {
-     stash(name: 'artifact', includes: 'target/*.jar')
-     stash(name: 'pom', includes: 'pom.xml')
-     // to add artifacts in jenkins pipeline tab (UI)
-     archiveArtifacts 'target/*.jar'
-    }
-   }   
-  }  
- } 
-}  
-  stage ('DeployTo S3'){
+	
+	
+    stage('SonarQube') {
+
+	
+     agent {
+      docker {
+       image 'maven:3.6.0-jdk-8-alpine'    
+	 args "-v /root/.m2/repository:/root/.m2/repository --net=devopsnet "  
+       reuseNode true
+      } 
+     }
+     steps {
+      sh " mvn sonar:sonar -Dsonar.host.url=$SONARQUBE_URL:$SONARQUBE_PORT"
+     }
+    
+  } 
+  
+     stage('Deploy Artifact To S3') {
+
+   steps {
+   
+   withAWS(region:'us-east-2',credentials:'aws-creds') {
+   sh 'aws --version'
+  // sh "if (! aws s3api head-bucket --bucket 'devops-project2' 2>/dev/null) ; then aws s3 mb s3://devops-project2 ; fi"
+   sh "aws s3 cp target/*.jar s3://devops-project2"
+   
+    }}
+  }	
+  
+
+	
+	stage('Publish API image to DockerHUB') {
+            environment {
+                registryCredential = 'dockerhub'
+            }
+            steps{
+                script {
+
+                    def appimage = docker.build registry2 + ":$BUILD_NUMBER"
+                    docker.withRegistry( '', registryCredential ) {
+                        appimage.push()
+                        appimage.push('latest')
+                    }
+                }
+            }
+        }  
+  
+  }}
+  
+
 		
-	steps{
-	 sh 'aws --version'
-	 sh "aws s3 mb s3://devops-project2"
-   	 sh "aws s3 cp target/*.jar s3://devops-project2"     		 
-	 }
-  }
- }  }
+ 
+
+
+
+    
+    stage('EMPLOYEE-CLIENT - CI') {
+            environment {
+                registryCredential = 'dockerhub'
+            }
+            steps{
+                script {
+                 
+				    git 'https://github.com/Narjesse/employee-client.git'
+                    def appimage = docker.build registry + ":$BUILD_NUMBER"
+                    docker.withRegistry( '', registryCredential ) {
+                        appimage.push()
+                        appimage.push('latest')
+                    }
+                }
+            } 
+ } 
+ 
+ 
+    
+ 
+         stage('DEPLOY TO PREPROD'){
+            steps {
+                withAWS(region:'us-east-2',credentials:'aws-creds') {
+				  git url:'https://github.com/Narjesse/devOpsaws.git', branch:'main'
+                    sh 'aws eks --region us-east-2 update-kubeconfig --name my-eks'   
+                    sh 'kubectl create namespace preprod --dry-run -o yaml | kubectl apply -f - '
+                    sh 'kubectl apply -f deployment-employees-latest.yml --namespace=preprod'
+                }
+            }
+        }
+		
+		
+		         stage('DEPLOY TO PROD'){
+            steps {
+                withAWS(region:'us-east-2',credentials:'aws-creds') {
+				  git url:'https://github.com/Narjesse/devOpsaws.git', branch:'main'
+                    sh 'aws eks --region us-east-2 update-kubeconfig --name my-eks'   
+                    sh 'kubectl create namespace prod --dry-run -o yaml | kubectl apply -f - '
+                    sh 'kubectl apply -f deployment-employees-latest.yml --namespace=prod'
+                }
+            }
+        }
+        
+
+ }
+ 
+}
