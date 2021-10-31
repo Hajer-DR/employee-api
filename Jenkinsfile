@@ -2,8 +2,8 @@ pipeline {
   agent any
     
   environment {
-  registry = "narjess6/employees-client"
-  registry2 = "narjess6/employees-api"
+  registry = "Hajer-DR/employee-client"
+  registry2 = "Hajer-DR/employee-api"
 
   SONARQUBE_URL = "http://192.168.0.30"
   SONARQUBE_PORT = "9000"
@@ -13,7 +13,7 @@ pipeline {
 
  stage('EMPLOYEE-API - Checkout code') {
       steps {
-        git url:'https://github.com/Narjesse/employee-api.git', branch:'main'
+        git url:'https://github.com/Hajer-DR/employee-api.git', branch:'main'
       }
     }
 
@@ -141,7 +141,7 @@ pipeline {
             steps{
                 script {
                  
-				    git 'https://github.com/Narjesse/employee-client.git'
+				    git 'https://github.com/Hajer-DR/employee-client.git'
                     def appimage = docker.build registry + ":$BUILD_NUMBER"
                     docker.withRegistry( '', registryCredential ) {
                         appimage.push()
