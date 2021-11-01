@@ -2,8 +2,8 @@ pipeline {
   agent any
     
   environment {
-  registry = "Hajer-DR/employees-client"
-  registry2 = "Hajer-DR/employees-api"
+  registry = "katsudoka/employees-client"
+  registry2 = "katsudoka/employees-api"
 
   SONARQUBE_URL = "http://192.168.0.181"
   SONARQUBE_PORT = "9000"
