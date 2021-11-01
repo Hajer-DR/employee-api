@@ -5,8 +5,8 @@ pipeline {
   registry = "Hajer-DR/employee-client"
   registry2 = "Hajer-DR/employee-api"
 
-  SONARQUBE_URL = "http://192.168.0.181"
-  SONARQUBE_PORT = "9000"
+  //SONARQUBE_URL = "http://192.168.0.181"
+  //SONARQUBE_PORT = "9000"
   }
     
   stages {
@@ -79,7 +79,7 @@ pipeline {
     }
 	
 	
-    stage('SonarQube') {
+   /* stage('SonarQube') {
 
 	
      agent {
@@ -93,7 +93,7 @@ pipeline {
       sh " mvn sonar:sonar -Dsonar.host.url=$SONARQUBE_URL:$SONARQUBE_PORT"
      }
     
-  } 
+  } */
   
      stage('Deploy Artifact To S3') {
 
