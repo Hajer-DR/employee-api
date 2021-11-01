@@ -1,17 +1,17 @@
 pipeline {
   agent any
     
- /* environment {
+  environment {
   registry = "katsudoka/employees-client"
   registry2 = "katsudoka/employees-api"
 
   SONARQUBE_URL = "http://192.168.0.181"
   SONARQUBE_PORT = "9000"
-  }*/
+  }
     
   stages {
 
-/* stage('EMPLOYEE-API - Checkout code') {
+  stage('EMPLOYEE-API - Checkout code') {
       steps {
         git url:'https://github.com/Hajer-DR/employee-api.git', branch:'main'
       }
@@ -93,7 +93,7 @@ pipeline {
       sh " mvn sonar:sonar -Dsonar.host.url=$SONARQUBE_URL:$SONARQUBE_PORT"
      }
     
-  } */
+  } 
   
      stage('Deploy Artifact To S3') {
 
@@ -110,7 +110,7 @@ pipeline {
   
 
 	
-	/*stage('Publish API image to DockerHUB') {
+	stage('Publish API image to DockerHUB') {
             environment {
                 registryCredential = 'dockerhub'
             }
@@ -176,7 +176,7 @@ pipeline {
                     sh 'kubectl apply -f deployment-employees-latest.yml --namespace=prod'
                 }
             }
-        }*/
+        }
         
 
  }
