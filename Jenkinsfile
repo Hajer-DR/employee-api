@@ -99,7 +99,8 @@ pipeline {
 
    steps {
    
-   withAWS(region:'us-east-2',credentials:'aws-creds') {
+   withAWS(region:'Global',credentials:'aws-creds') {
+	   
    sh 'aws --version'
   // sh "if (! aws s3api head-bucket --bucket 'devops-project2' 2>/dev/null) ; then aws s3 mb s3://devops-project2 ; fi"
    sh "aws s3 cp target/*.jar s3://devops-project2"
