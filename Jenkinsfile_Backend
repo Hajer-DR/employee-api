@@ -2,18 +2,17 @@ pipeline {
   agent any
     
   environment {
-  registry = "Hajer-DR/employee-client"
-  registry2 = "Hajer-DR/employee-api"
+  registry = "narjess6/employees-api"
 
-  //SONARQUBE_URL = "http://192.168.0.181"
-  //SONARQUBE_PORT = "9000"
+  SONARQUBE_URL = "http://192.168.0.30"
+  SONARQUBE_PORT = "9000"
   }
     
   stages {
 
  stage('EMPLOYEE-API - Checkout code') {
       steps {
-        git url:'https://github.com/Hajer-DR/employee-api.git', branch:'main'
+        git url:'https://github.com/Narjesse/employee-api.git', branch:'main'
       }
     }
 
@@ -79,7 +78,7 @@ pipeline {
     }
 	
 	
-   /* stage('SonarQube') {
+    stage('SonarQube') {
 
 	
      agent {
@@ -93,7 +92,7 @@ pipeline {
       sh " mvn sonar:sonar -Dsonar.host.url=$SONARQUBE_URL:$SONARQUBE_PORT"
      }
     
-  } */
+  } 
   
      stage('Deploy Artifact To S3') {
 
@@ -116,7 +115,7 @@ pipeline {
             steps{
                 script {
 
-                    def appimage = docker.build registry2 + ":$BUILD_NUMBER"
+                    def appimage = docker.build registry + ":$BUILD_NUMBER"
                     docker.withRegistry( '', registryCredential ) {
                         appimage.push()
                         appimage.push('latest')
@@ -128,39 +127,15 @@ pipeline {
   }}
   
 
-		
- 
 
-
-
-    
-    stage('EMPLOYEE-CLIENT - CI') {
-            environment {
-                registryCredential = 'dockerhub'
-            }
-            steps{
-                script {
-                 
-				    git 'https://github.com/Hajer-DR/employee-client.git'
-                    def appimage = docker.build registry + ":$BUILD_NUMBER"
-                    docker.withRegistry( '', registryCredential ) {
-                        appimage.push()
-                        appimage.push('latest')
-                    }
-                }
-            } 
- } 
- 
- 
-    
- 
          stage('DEPLOY TO PREPROD'){
             steps {
                 withAWS(region:'us-east-2',credentials:'aws-creds') {
 				  git url:'https://github.com/Narjesse/devOpsaws.git', branch:'main'
                     sh 'aws eks --region us-east-2 update-kubeconfig --name my-eks'   
                     sh 'kubectl create namespace preprod --dry-run -o yaml | kubectl apply -f - '
-                    sh 'kubectl apply -f deployment-employees-latest.yml --namespace=preprod'
+                    sh 'kubectl delete -f deployment-API-POD.yml --namespace=preprod'
+                    sh 'kubectl apply -f deployment-API-All.yml --namespace=preprod'
                 }
             }
         }
@@ -172,7 +147,8 @@ pipeline {
 				  git url:'https://github.com/Narjesse/devOpsaws.git', branch:'main'
                     sh 'aws eks --region us-east-2 update-kubeconfig --name my-eks'   
                     sh 'kubectl create namespace prod --dry-run -o yaml | kubectl apply -f - '
-                    sh 'kubectl apply -f deployment-employees-latest.yml --namespace=prod'
+                    sh 'kubectl delete -f deployment-API-POD.yml --namespace=prod'
+                    sh 'kubectl apply -f deployment-API-All.yml --namespace=prod'
                 }
             }
         }
