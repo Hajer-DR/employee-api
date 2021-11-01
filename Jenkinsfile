@@ -2,9 +2,9 @@ pipeline {
   agent any
     
   environment {
-  registry = "narjess6/employees-api"
+  registry = "Hajer-DR/employees-api"
 
-  SONARQUBE_URL = "http://192.168.0.30"
+  SONARQUBE_URL = "http://192.168.0.181"
   SONARQUBE_PORT = "9000"
   }
     
@@ -12,7 +12,7 @@ pipeline {
 
  stage('EMPLOYEE-API - Checkout code') {
       steps {
-        git url:'https://github.com/Narjesse/employee-api.git', branch:'main'
+        git url:'https://github.com/Hajer-DR/employee-api.git', branch:'main'
       }
     }
 
