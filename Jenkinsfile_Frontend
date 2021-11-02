@@ -1,10 +1,10 @@
 pipeline {
   agent any
     
- /* environment {
+  environment {
   registry = "katsudoka/employees-client"
 
-  }*/
+  }
     
   stages {
   
@@ -14,7 +14,7 @@ stage('EMPLOYEE-client - Checkout code') {
       }
     }
     
-   /* stage('EMPLOYEE-CLIENT - CI') {
+    stage('EMPLOYEE-CLIENT - CI') {
             environment {
                 registryCredential = 'dockerhub'
             }
@@ -29,7 +29,7 @@ stage('EMPLOYEE-client - Checkout code') {
                     }
                 }
             } 
- } */
+ } 
  
  
     
