@@ -128,7 +128,7 @@ pipeline {
   
 
 
-         stage('DEPLOY TO PREPROD'){
+       /*  stage('DEPLOY TO PREPROD'){
             steps {
                 withAWS(region:'us-east-2',credentials:'aws-creds') {
 				  git url:'https://github.com/Narjesse/devOpsaws.git', branch:'main'
@@ -151,7 +151,7 @@ pipeline {
                     sh 'kubectl apply -f deployment-API-All.yml --namespace=prod'
                 }
             }
-        }
+        }*/
         
 
  }
