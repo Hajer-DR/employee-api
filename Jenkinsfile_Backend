@@ -130,10 +130,9 @@ pipeline {
 
          stage('DEPLOY TO PREPROD'){
             steps {
-                withAWS(region:'us-east-2',credentials:'aws-creds') {
-				  git url:'https://github.com/Narjesse/devOpsaws.git', branch:'main'
-                    sh 'aws eks --region us-east-2 update-kubeconfig --name my-eks'   
-                    sh 'kubectl create namespace preprod --dry-run -o yaml | kubectl apply -f - '
+                withAWS(region:'us-west-1',credentials:'aws-creds') {
+                    sh 'aws eks --region us-west-1 update-kubeconfig --name my-eks'   
+                    //sh 'kubectl create namespace preprod --dry-run -o yaml | kubectl apply -f - '
                     sh 'kubectl delete -f deployment-API-POD.yml --namespace=preprod --ignore-not-found=true'
                     sh 'kubectl apply -f deployment-API-All.yml --namespace=preprod'
                 }
