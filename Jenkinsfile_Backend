@@ -1,13 +1,6 @@
 pipeline {
-  agent any
-    
-  environment {
-  registry = "katsudoka/employees-api"
-
-  SONARQUBE_URL = "http://192.168.0.181"
-  SONARQUBE_PORT = "9000"
-  }
-    
+ 
+  
   stages {
 
  stage('EMPLOYEE-API - Checkout code') {
@@ -21,14 +14,7 @@ pipeline {
   
    parallel {
     stage('Compile') {
-     agent {
-      docker {
-       image 'maven:3.6.0-jdk-8-alpine'
-       args '-v /root/.m2/repository:/root/.m2/repository'
-       // to use the same node and workdir defined on top-level pipeline for all docker agents
-       reuseNode true
-      }
-     }
+     
      steps {
       sh ' mvn clean compile'
 	  sh 'mvn package -DskipTests=true'
@@ -38,14 +24,6 @@ pipeline {
 	
   stage('Unit Tests') {
 
-
-   agent {
-    docker {
-     image 'maven:3.6.0-jdk-8-alpine'
-     args '-v /root/.m2/repository:/root/.m2/repository'
-     reuseNode true
-    }
-   }
    steps {
     
     sh 'mvn  install '
@@ -64,13 +42,6 @@ pipeline {
 
     stage('JavaDoc') {
 
-     agent {
-      docker {
-       image 'maven:3.6.0-jdk-8-alpine'
-       args '-v /root/.m2/repository:/root/.m2/repository'
-       reuseNode true
-      }
-     }
      steps {
       sh ' mvn javadoc:javadoc'
       step([$class: 'JavadocArchiver', javadocDir: './target/site/apidocs', keepAll: 'true'])
@@ -80,14 +51,6 @@ pipeline {
 	
     stage('SonarQube') {
 
-	
-     agent {
-      docker {
-       image 'maven:3.6.0-jdk-8-alpine'    
-	 args "-v /root/.m2/repository:/root/.m2/repository --net=devopsnet "  
-       reuseNode true
-      } 
-     }
      steps {
       sh " mvn sonar:sonar -Dsonar.host.url=$SONARQUBE_URL:$SONARQUBE_PORT"
      }
